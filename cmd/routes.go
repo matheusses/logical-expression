@@ -6,8 +6,9 @@ import (
 )
 
 func setupRoutes(app *fiber.App) {
+	app.Get("/evaluate/:id", handlers.EvaluateExpression)
 	app.Get("/expressions", handlers.ListExpressions)
-    app.Post("/expressions", handlers.CreateExpression)
+	app.Post("/expressions", handlers.CreateExpression)
 	app.Put("/expressions/:id", handlers.UpdateExpression)
 	app.Delete("/expressions/:id", handlers.DeleteExpression)
 }
