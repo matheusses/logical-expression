@@ -85,7 +85,7 @@ func TestLogicalExpression_EvaluatePerQueryString(t *testing.T) {
 			name: "((x OR y) AND (z and k) AND j) => x=1&y=1&z=1&k=1&j=1 :true",
 			fields: fields{
 				Model:      gorm.Model{},
-				Expression: "((x OR y) AND (z OR k) OR j)",
+				Expression: "((x OR y) AND (z OR k) AND j)",
 			},
 			args: args{
 				queryString: "x=1&y=1&z=1&k=1&j=1",
@@ -97,12 +97,48 @@ func TestLogicalExpression_EvaluatePerQueryString(t *testing.T) {
 			name: "((x OR y) AND (z and k) AND j) => x=1&y=1&z=1&k=1&j=0 :false",
 			fields: fields{
 				Model:      gorm.Model{},
-				Expression: "((x OR y) AND (z OR k) OR j)",
+				Expression: "((x OR y) AND (z OR k) AND j)",
 			},
 			args: args{
 				queryString: "x=1&y=1&z=1&k=1&j=0",
 			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "((x OR y) AND (z and k) AND j) => x=1&y=1&z=1&k=1 :false",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "((x OR y) AND (z OR k) AND j)",
+			},
+			args: args{
+				queryString: "x=1&y=1&z=1&k=1",
+			},
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name: "x AND y => x=1&y=1 :true",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "x AND y",
+			},
+			args: args{
+				queryString: "x=1&y=1",
+			},
 			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "x AND y => x=0&y=1 :false",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "x AND y",
+			},
+			args: args{
+				queryString: "x=0&y=1",
+			},
+			want:    false,
 			wantErr: false,
 		},
 	}

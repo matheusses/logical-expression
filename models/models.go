@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -61,16 +62,14 @@ func (self *LogicalExpression) performLogicalOperation(localExpressions []string
 	return expressions
 }
 
-func (self *LogicalExpression) EvaluatePerQueryString(queryString string) (bool, error) {
-
+func (self *LogicalExpression) convertQueryStringToExpression(queryString string) (string, error) {
 	expression := self.Expression
-
 	params := strings.Split(queryString, "&")
-	for _, value := range params {
-		dict := strings.Split(value, "=")
-		expression = strings.ToLower(expression)
-		expression = strings.ReplaceAll(expression, dict[0], dict[1])
-	}
+	// Base to interepret the string in (default is 10)
+	base := 10
+	// Size (in bits) of the resulting integer type
+	bitSize := 32
+	pattern := ".*[a-zA-Z].*"
 
 	// Define a map of keyword-symbol associations
 	symbols := map[string]string{
@@ -87,6 +86,39 @@ func (self *LogicalExpression) EvaluatePerQueryString(queryString string) (bool,
 		expression = strings.ReplaceAll(strings.ToLower(expression), keyword, symbol)
 	}
 
+	// Replay query string to value
+	for _, value := range params {
+		dict := strings.Split(value, "=")
+		value, err := strconv.ParseInt(dict[1], base, bitSize)
+		if err != nil || (value != 0 && value != 1) {
+			err := errors.New("Invalid value in query string: " + dict[0] + "=" + dict[1])
+			return expression, err
+		}
+		expression = strings.ToLower(expression)
+		expression = strings.ReplaceAll(expression, dict[0], dict[1])
+	}
+
+	match, _ := regexp.MatchString(pattern, expression)
+	if match {
+		err := errors.New("Paramaters not fill")
+		return expression, err
+	}
+
+	if len(expression) > 0 && expression[0] != '[' {
+		expression = "[" + expression + "]"
+	}
+
+	return expression, nil
+}
+
+func (self *LogicalExpression) EvaluatePerQueryString(queryString string) (bool, error) {
+
+	expression, err := self.convertQueryStringToExpression(queryString)
+
+	if err != nil {
+		return false, err
+	}
+
 	expressions := []string{}
 
 	// Traversing string from the end
@@ -94,9 +126,11 @@ func (self *LogicalExpression) EvaluatePerQueryString(queryString string) (bool,
 	for i := n - 1; i >= 0; i-- {
 		if string(expression[i]) == "[" {
 			localExpressions := []string{}
+			// Solving expression - While the logical expression is solving and does not reach the final based on a close bracket
 			for len(expressions) > 0 && string(expressions[len(expressions)-1]) != "]" {
 				// Creating local expression
 				localExpressions = append(localExpressions, expressions[len(expressions)-1])
+				// Updating expressions decrementing local expression
 				expressions = expressions[:len(expressions)-1]
 
 				// Invert the value
