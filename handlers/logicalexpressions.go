@@ -107,10 +107,10 @@ func EvaluateExpression(context *fiber.Ctx) error {
 	}
 
 	result, err := logicalExpression.EvaluatePerQueryString(queryString)
-	print(err)
+
 	if err != nil {
 		context.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
-			"message": err,
+			"message": err.Error(),
 		})
 		return nil
 	}
