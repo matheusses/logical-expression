@@ -52,7 +52,12 @@ func (self *LogicalExpression) performLogicalOperation(localExpressions []string
 	} else {
 		result = firstArg | secongArg
 	}
-	expressions = append(expressions, strconv.Itoa(result))
+
+	if len(expressions) > 0 {
+		expressions = append(expressions[:len(expressions)-1], strconv.Itoa(result))
+	} else {
+		expressions = append(expressions, strconv.Itoa(result))
+	}
 	return expressions
 }
 
@@ -92,21 +97,21 @@ func (self *LogicalExpression) EvaluatePerQueryString(queryString string) (bool,
 			for len(expressions) > 0 && string(expressions[len(expressions)-1]) != "]" {
 				// Creating local expression
 				localExpressions = append(localExpressions, expressions[len(expressions)-1])
-			}
-
-			// keeping the rest of the expression
-			if len(expressions) > 0 {
 				expressions = expressions[:len(expressions)-1]
-			}
 
-			// Invert the value
-			if self.contains(localExpressions, "!") {
-				localExpressions = self.performNotOperation(localExpressions)
-			}
+				// Invert the value
+				if self.contains(localExpressions, "!") {
+					localExpressions = self.performNotOperation(localExpressions)
+				}
 
-			// Perform the logical operation
-			if len(localExpressions) == 3 {
-				expressions = self.performLogicalOperation(localExpressions, expressions)
+				// Perform the logical operation
+				if len(localExpressions) == 3 {
+					expressions = self.performLogicalOperation(localExpressions, expressions)
+					localExpressions = []string{}
+				}
+			}
+			if len(localExpressions) > 0 && len(expressions) == 0 {
+				expressions = localExpressions
 			}
 		} else {
 			expressions = append(expressions, string(expression[i]))

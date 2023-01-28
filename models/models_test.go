@@ -22,13 +22,85 @@ func TestLogicalExpression_EvaluatePerQueryString(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "simple test",
+			name: "(x OR y) AND z => x=1&y=1&z=1: true",
 			fields: fields{
 				Model:      gorm.Model{},
-				Expression: "((x AND y) OR z)",
+				Expression: "(x OR y) AND z",
 			},
 			args: args{
 				queryString: "x=1&y=1&z=1",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "(x OR y) AND z => x=1&y=0&z=1: true",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "(x OR y) AND z",
+			},
+			args: args{
+				queryString: "x=1&y=0&z=1",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "(x OR y) AND z => x=1&y=1&z=0: false",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "(x OR y) AND z",
+			},
+			args: args{
+				queryString: "x=1&y=1&z=0",
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "((x OR y) AND (z OR k) OR j) => x=1&y=1&z=1&k=1&j=1 :true",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "((x OR y) AND (z OR k) OR j)",
+			},
+			args: args{
+				queryString: "x=1&y=1&z=1&k=1&j=1",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "((x OR y) AND (z OR k) OR j) => x=0&y=0&z=1&k=1&j=1 :false",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "((x OR y) AND (z OR k) OR j)",
+			},
+			args: args{
+				queryString: "x=0&y=0&z=1&k=1&j=1",
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "((x OR y) AND (z and k) AND j) => x=1&y=1&z=1&k=1&j=1 :true",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "((x OR y) AND (z OR k) OR j)",
+			},
+			args: args{
+				queryString: "x=1&y=1&z=1&k=1&j=1",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "((x OR y) AND (z and k) AND j) => x=1&y=1&z=1&k=1&j=0 :false",
+			fields: fields{
+				Model:      gorm.Model{},
+				Expression: "((x OR y) AND (z OR k) OR j)",
+			},
+			args: args{
+				queryString: "x=1&y=1&z=1&k=1&j=0",
 			},
 			want:    true,
 			wantErr: false,
