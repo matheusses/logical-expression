@@ -122,26 +122,32 @@ func (self *LogicalExpression) EvaluatePerQueryString(queryString string) (bool,
 	expressions := []string{}
 
 	// Traversing string from the end
+	//[[]]
 	n := len(expression)
 	for i := n - 1; i >= 0; i-- {
 		if string(expression[i]) == "[" {
 			localExpressions := []string{}
 			// Solving expression - While the logical expression is solving and does not reach the final based on a close bracket
-			for len(expressions) > 0 && string(expressions[len(expressions)-1]) != "]" {
-				// Creating local expression
-				localExpressions = append(localExpressions, expressions[len(expressions)-1])
-				// Updating expressions decrementing local expression
-				expressions = expressions[:len(expressions)-1]
+			for len(expressions) > 0 {
+				//Removing brackets to solve local expression
+				if expressions[len(expressions)-1] == "[" || expressions[len(expressions)-1] == "]" {
+					expressions = expressions[:len(expressions)-1]
+				} else {
+					// Creating local expression
+					localExpressions = append(localExpressions, expressions[len(expressions)-1])
+					// Updating expressions decrementing local expression
+					expressions = expressions[:len(expressions)-1]
 
-				// Invert the value
-				if self.contains(localExpressions, "!") {
-					localExpressions = self.performNotOperation(localExpressions)
-				}
+					// Invert the value
+					if self.contains(localExpressions, "!") {
+						localExpressions = self.performNotOperation(localExpressions)
+					}
 
-				// Perform the logical operation
-				if len(localExpressions) == 3 {
-					expressions = self.performLogicalOperation(localExpressions, expressions)
-					localExpressions = []string{}
+					// Perform the logical operation
+					if len(localExpressions) == 3 {
+						expressions = self.performLogicalOperation(localExpressions, expressions)
+						localExpressions = []string{}
+					}
 				}
 			}
 			if len(localExpressions) > 0 && len(expressions) == 0 {

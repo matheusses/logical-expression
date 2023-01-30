@@ -22,13 +22,13 @@ func TestLogicalExpression_EvaluatePerQueryString(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "(x OR y) AND z => x=1&y=1&z=1: true",
+			name: "1 => x=1&y=1&z=1: true",
 			fields: fields{
 				Model:      gorm.Model{},
-				Expression: "(x OR y) AND z",
+				Expression: "(((x AND y) AND (z OR k)) OR j)",
 			},
 			args: args{
-				queryString: "x=1&y=1&z=1",
+				queryString: "x=1&y=1&z=0&k=1&j=1",
 			},
 			want:    true,
 			wantErr: false,
